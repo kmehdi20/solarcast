@@ -1,8 +1,8 @@
 [project]
 name = "solarcast"
 version = "0.1.0"
-description = "Framework modulaire d'analyse de séries temporelles énergétiques"
-requires-python = ">=3.11"
+description = "Modular framework for solar energy time-series analysis"
+requires-python = ">=3.10"
 dependencies = [
     "SQLAlchemy[asyncio]>=2.0,<3.0",
     "aiosqlite>=0.20",
@@ -10,6 +10,10 @@ dependencies = [
     "pydantic>=2.7",
     "PyYAML>=6.0",
     "pandas>=2.2",
+    "pvlib>=0.11",
+    "scikit-learn>=1.5",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +31,7 @@ include = ["solarcast*"]
 
 [tool.ruff]
 line-length = 90
-target-version = "py311"
+target-version = "py310"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
