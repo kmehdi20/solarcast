@@ -1,0 +1,89 @@
+# SolarCast configuration
+#
+# Any value can be overridden by an environment variable prefixed with
+# SOLARCAST_, the double underscore separating levels:
+#
+#   SOLARCAST_DATABASE__URL=postgresql+asyncpg://user:pass@host/solarcast
+#   SOLARCAST_LOGGING__LEVEL=DEBUG
+#
+# No secrets should live here: this file is version-controlled.
+
+environment: dev
+
+database:
+  # SQLite is enough for development and the first few million points.
+  # Switch to PostgreSQL (ideally with TimescaleDB) once multi-site
+  # history grows large.
+  url: "sqlite+aiosqlite:///data/solarcast.db"
+  echo: false
+  pool_size: 5
+
+logging:
+  level: INFO
+  json_format: false
+
+providers:
+
+  open-meteo:
+    enabled: true
+    base_url: "https://api.open-meteo.com"
+    timeout_s: 30.0
+    rate_limit:
+      max_concurrency: 4
+      requests_per_second: 2.0
+    retry:
+      max_attempts: 4
+      initial_backoff_s: 1.0
+      backoff_multiplier: 2.0
+      max_backoff_s: 30.0
+      jitter: true
+    options:
+      # The reanalysis archive is served from a different host than the forecast.
+      archive_url: "https://archive-api.open-meteo.com"
+      wind_speed_unit: "ms"
+
+  pvgis:
+    enabled: true
+    base_url: "https://re.jrc.ec.europa.eu/api"
+    timeout_s: 90.0        # seriescalc is slow over multiple years
+    rate_limit:
+      max_concurrency: 1   # the JRC doesn't appreciate bursts
+      requests_per_second: 0.5
+    retry:
+      max_attempts: 3
+      initial_backoff_s: 2.0
+      backoff_multiplier: 2.0
+      max_backoff_s: 60.0
+      jitter: true
+    options:
+      # Pin the version: the JRC has changed default values between
+      # versions of the non-interactive service before.
+      api_version: "v5_2"
+      # Leave empty to let PVGIS pick the best-covering database.
+      # Careful: SARAH provides instantaneous values, ERA5 hourly
+      # averages. Don't mix two databases within the same training set.
+      raddatabase: ""
+      surface_tilt: 0.0      # 0 = horizontal plane -> G(i) is GHI
+      surface_azimuth: 0.0   # 0 = due south in PVGIS convention
+      pv_calculation: false
+      peak_power_kw: null
+      system_loss: 14.0
+
+locations:
+  - name: "Kenitra"
+    latitude: 34.2610
+    longitude: -6.5802
+    altitude_m: 20
+    timezone: "Africa/Casablanca"
+
+  - name: "Meknes"
+    latitude: 33.8935
+    longitude: -5.5473
+    altitude_m: 550
+    timezone: "Africa/Casablanca"
+
+  - name: "Ouarzazate"
+    latitude: 30.9335
+    longitude: -6.9370
+    altitude_m: 1135
+    timezone: "Africa/Casablanca"
